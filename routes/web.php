@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CategoryController;
 
 // Home Route
@@ -37,15 +38,15 @@ Route::post('/admin/blogs/store', [BlogController::class, 'store'])->name('admin
 
 // routes/web.php
 
-// Route to display the category edit form
+
 Route::get('/admin/categories/{id}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
-// Route to handle the update of a category
+
 Route::put('/admin/categories/{id}', [CategoryController::class, 'update'])->name('admin.categories.update');
-// Route to handle the deletion of a category
+
 Route::delete('/admin/categories/{id}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
-// Route to display the create category form
+
 Route::get('/admin/categories/create', [CategoryController::class, 'create'])->name('admin.categories.create');
-// Route to handle the submission of the create category form
+
 Route::post('/admin/categories/store', [CategoryController::class, 'store'])->name('admin.categories.store');
 
 
@@ -53,4 +54,10 @@ Route::post('/admin/categories/store', [CategoryController::class, 'store'])->na
 
 Route::get('/blogs', [BlogController::class, 'index'])->name('blog');
 Route::get('/blogs/{id}', [BlogController::class, 'show'])->name('blog.show');
+
+
+Route::post('/blogs/{blogId}/comments', [CommentController::class, 'store'])->name('comment.store');
+Route::post('/blogs/{blogId}/comments/{commentId}/reply', [CommentController::class, 'reply'])->name('comment.reply');
+
+
 

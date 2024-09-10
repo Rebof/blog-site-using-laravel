@@ -37,7 +37,7 @@ class BlogController extends Controller
     // Show a single blog in detail
     public function show($id)
     {
-        $blog = Blog::findOrFail($id);
+        $blog = Blog::with('comments')->findOrFail($id);
 
         return view('single-blog', compact('blog'));
     }
