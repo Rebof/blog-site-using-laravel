@@ -55,6 +55,11 @@
             <p>Email: {{ Auth::user()->email }}</p>
         </div>
 
+        <!-- Button to view all blog posts -->
+        <div class="text-center mb-4">
+            <a href="{{ route('blog') }}" class="btn btn-primary">View All Blog Posts</a>
+        </div>
+
         <div class="card card-blogs">
             <div class="card-header">
                 Manage Blogs
