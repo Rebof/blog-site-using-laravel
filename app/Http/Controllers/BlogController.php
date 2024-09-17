@@ -9,6 +9,8 @@ use App\Models\Like;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
 
 class BlogController extends Controller
 {
@@ -59,32 +61,44 @@ class BlogController extends Controller
 
     // Admin: Store a newly created blog
     public function store(Request $request)
-    {
-        $user = Auth::user();
-        
-        if ($user && $user->user_type == 'admin') {
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'body' => 'required|string',
-                'author' => 'required',
-                'category_id' => 'required|exists:categories,id',
-                'status' => 'required|in:published,drafted',
-            ]);
+{
+    $user = Auth::user();
 
-            Blog::create([
-                'user_id' => $user->id,
-                'title' => $request->title,
-                'author' => $request-> author,
-                'body' => $request->body,
-                'category_id' => $request->category_id,
-                'status' => $request->status,
-            ]);
+    if ($user && $user->user_type == 'admin') {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required|string',
+            'author' => 'required',
+            'category_id' => 'required|exists:categories,id',
+            'status' => 'required|in:published,drafted',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-            return redirect()->route('admin.dashboard');
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imageName = time() . '.' . $request->image->extension();
+            $request->image->storeAs('public/blog_images', $imageName);
+            $imagePath = 'blog_images/' . $imageName; // Save relative path
         }
 
-        return redirect()->route('home');
+        // Create the blog post
+        Blog::create([
+            'user_id' => $user->id,
+            'title' => $request->title,
+            'author' => $request->author,
+            'body' => $request->body,
+            'category_id' => $request->category_id,
+            'status' => $request->status,
+            'image_path' => $imagePath, // Save relative path
+        ]);
+
+        return redirect()->route('admin.dashboard');
     }
+
+    return redirect()->route('home');
+}
+
 
     // Admin: Show a form to edit a blog
     public function edit($id)
@@ -103,31 +117,48 @@ class BlogController extends Controller
 
     // Admin: Update a blog
     public function update(Request $request, $id)
-    {
-        $user = Auth::user();
-        
-        if ($user && $user->user_type == 'admin') {
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'body' => 'required|string',
-                'category_id' => 'required',
-                'status' => 'required|in:published,drafted',
-            ]);
+{
+    $user = Auth::user();
 
-            $blog = Blog::findOrFail($id);
-            
-            $blog->update([
-                'title' => $request->title,
-                'body' => $request->body,
-                'category_id' => $request->category_id,
-                'status' => $request->status,
-            ]);
+    if ($user && $user->user_type == 'admin') {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required|string',
+            'category_id' => 'required',
+            'status' => 'required|in:published,drafted',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-            return redirect()->route('admin.dashboard');
+        $blog = Blog::findOrFail($id);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if it exists
+            if ($blog->image_path) {
+                Storage::disk('public')->delete($blog->image_path);
+            }
+
+            $imageName = time() . '.' . $request->image->extension();
+            $request->image->storeAs('public/blog_images', $imageName);
+            $blog->image_path = 'blog_images/' . $imageName; // Save relative path
         }
 
-        return redirect()->route('home');
+        // Update the blog post
+        $blog->update([
+            'title' => $request->title,
+            'body' => $request->body,
+            'category_id' => $request->category_id,
+            'status' => $request->status,
+            'image_path' => $blog->image_path, // Update image path if changed
+        ]);
+
+        return redirect()->route('admin.dashboard');
     }
+
+    return redirect()->route('home');
+}
+
+
 
     // Admin: Delete a blog
     public function destroy($id)
@@ -144,7 +175,7 @@ class BlogController extends Controller
         return redirect()->route('home');
     }
 
-    
+
         public function likeBlog(Request $request, $id)
     {
         $blog = Blog::find($id);

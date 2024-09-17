@@ -39,6 +39,7 @@
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative; /* Added to position the image */
         }
 
         h1 {
@@ -48,6 +49,15 @@
 
         p {
             color: #333;
+        }
+
+        .blog-image {
+            float: right;
+            margin-left: 20px;
+            margin-bottom: 10px;
+            max-width: 200px; /* Adjust size */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .comments {
@@ -126,48 +136,52 @@
         <h1>{{ $blog->title }}</h1>
         <p>By: {{ $blog->author }}</p>
         <p>Posted on: {{ $blog->created_at->format('d M Y H:i') }}</p>
+
+        <!-- Blog Image -->
+        @if($blog->image_path)
+    <img src="{{ asset('storage/' . $blog->image_path) }}" alt="Blog Image" class="blog-image">
+        @endif
+
         <div>
             {{ $blog->body }}
         </div>
 
         <!-- Like/Dislike Section -->
-    <!-- Like/Dislike Section -->
-    <div class="like-dislike">
-        @if(Auth::check())
-            <button class="like-btn" data-blog-id="{{ $blog->id }}" {{ $userLike && $userLike->is_like ? 'disabled' : '' }}>
-                {{ $blog->likes->where('is_like', true)->count() }} 👍 Like
-            </button>
+        <div class="like-dislike">
+            @if(Auth::check())
+                <button class="like-btn" data-blog-id="{{ $blog->id }}" {{ $userLike && $userLike->is_like ? 'disabled' : '' }}>
+                    {{ $blog->likes->where('is_like', true)->count() }} 👍 Like
+                </button>
 
-            <button class="dislike-btn" data-blog-id="{{ $blog->id }}" {{ $userLike && !$userLike->is_like ? 'disabled' : '' }}>
-                {{ $blog->likes->where('is_like', false)->count() }} 👎 Dislike
-            </button>
-        @else
-            <p>You need to be <a href="{{ route('login') }}">logged in</a> to like or dislike this post.</p>
-        @endif
-    </div>
+                <button class="dislike-btn" data-blog-id="{{ $blog->id }}" {{ $userLike && !$userLike->is_like ? 'disabled' : '' }}>
+                    {{ $blog->likes->where('is_like', false)->count() }} 👎 Dislike
+                </button>
+            @else
+                <p>You need to be <a href="{{ route('login') }}">logged in</a> to like or dislike this post.</p>
+            @endif
+        </div>
 
+        <!-- Comments Section -->
+        <div class="comments">
+            <h2>Comments:</h2>
+            @foreach ($blog->comments->whereNull('parent_id') as $comment)
+                <div class="comment">
+                    <p><strong>{{ $comment->user->name }}</strong>: {{ $comment->comment }}</p>
+                    @if ($comment->is_admin)
+                        <p class="admin-reply">Admin Reply</p>
+                    @endif
 
-            <!-- Comments Section -->
-            <div class="comments">
-                <h2>Comments:</h2>
-                @foreach ($blog->comments->whereNull('parent_id') as $comment)
-                    <div class="comment">
-                        <p><strong>{{ $comment->user->name }}</strong>: {{ $comment->comment }}</p>
-                        @if ($comment->is_admin)
-                            <p class="admin-reply">Admin Reply</p>
-                        @endif
-
-                        <!-- Display Replies -->
-                        <div class="replies">
-                            @foreach ($blog->comments->where('parent_id', $comment->id) as $reply)
-                                <div class="comment">
-                                    <p><strong>{{ $reply->user->name }}</strong>: {{ $reply->comment }}</p>
-                                    @if ($reply->is_admin)
-                                        <p class="admin-reply">Admin Reply</p>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
+                    <!-- Display Replies -->
+                    <div class="replies">
+                        @foreach ($blog->comments->where('parent_id', $comment->id) as $reply)
+                            <div class="comment">
+                                <p><strong>{{ $reply->user->name }}</strong>: {{ $reply->comment }}</p>
+                                @if ($reply->is_admin)
+                                    <p class="admin-reply">Admin Reply</p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
 
                     <!-- Reply Form -->
                     @if(Auth::check() && Auth::user()->user_type === 'admin')
@@ -193,6 +207,7 @@
         </div>
     </div>
 </body>
+
 <script>
     $(document).ready(function() {
         // Handle Like Button Click

@@ -55,6 +55,12 @@
         .form-label {
             font-weight: bold;
         }
+
+        .img-preview {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -72,7 +78,7 @@
     <!-- Content -->
     <div class="container mt-5">
         <h1>Edit Blog</h1>
-        <form action="{{ route('admin.blogs.update', $blog->id) }}" method="POST">
+        <form action="{{ route('admin.blogs.update', $blog->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="mb-3">
@@ -100,11 +106,44 @@
                     <option value="drafted" {{ $blog->status == 'drafted' ? 'selected' : '' }}>Drafted</option>
                 </select>
             </div>
+            <div class="mb-3">
+                <label for="image" class="form-label">Image:</label>
+                <input type="file" class="form-control" name="image" id="image" onchange="previewImage(event)">
+                @if($blog->image_path)
+                    <img src="{{ asset('storage/' . $blog->image_path) }}" alt="Current Image" class="img-preview mt-2" id="currentImage">
+                @endif
+                <img id="imgPreview" class="img-preview mt-2" style="display: none;">
+            </div>
             <button type="submit" class="btn btn-primary">Update Blog</button>
         </form>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function previewImage(event) {
+            const input = event.target;
+            const imgPreview = document.getElementById('imgPreview');
+            const currentImage = document.getElementById('currentImage');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imgPreview.src = e.target.result;
+                    imgPreview.style.display = 'block';
+                    if (currentImage) {
+                        currentImage.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                imgPreview.style.display = 'none';
+                if (currentImage) {
+                    currentImage.style.display = 'block';
+                }
+            }
+        }
+    </script>
 </body>
 </html>

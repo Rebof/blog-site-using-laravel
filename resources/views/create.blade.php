@@ -48,7 +48,7 @@
         }
 
         .btn-primary {
-            background-color: #e2d8d83;
+            background-color: #e2d8d8;
             border-color: #333;
         }
 
@@ -80,7 +80,7 @@
                     </div>
                     <div class="card-body">
                         <!-- Blog Creation Form -->
-                        <form action="{{ route('admin.blogs.store') }}" method="POST">
+                        <form action="{{ route('admin.blogs.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title</label>
@@ -109,6 +109,10 @@
                                     <option value="published">Published</option>
                                     <option value="drafted">Drafted</option>
                                 </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Image (optional)</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Create Blog</button>
                         </form>

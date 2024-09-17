@@ -16,8 +16,13 @@ class Blog extends Model
         'author',
         'body',
         'status',
+        'image_path', 
     ];
 
+    public function getImageUrlAttribute()
+    {
+        return $this->image_path ? asset($this->image_path) : null;
+    }
 
     public function user()
     {
