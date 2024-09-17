@@ -60,4 +60,7 @@ Route::post('/blogs/{blogId}/comments', [CommentController::class, 'store'])->na
 Route::post('/blogs/{blogId}/comments/{commentId}/reply', [CommentController::class, 'reply'])->name('comment.reply');
 
 
+Route::post('/blog/{id}/like', [BlogController::class, 'likeBlog'])->name('blog.like');
+
+
 

@@ -96,7 +96,18 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        .like-dislike {
+            margin-top: 20px;
+        }
+
+        .like-dislike button {
+            margin-right: 10px;
+        }
     </style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 <body>
     <!-- Navbar -->
@@ -119,27 +130,44 @@
             {{ $blog->body }}
         </div>
 
-        <!-- Comments Section -->
-        <div class="comments">
-            <h2>Comments:</h2>
-            @foreach ($blog->comments->whereNull('parent_id') as $comment)
-                <div class="comment">
-                    <p><strong>{{ $comment->user->name }}</strong>: {{ $comment->comment }}</p>
-                    @if ($comment->is_admin)
-                        <p class="admin-reply">Admin Reply</p>
-                    @endif
+        <!-- Like/Dislike Section -->
+    <!-- Like/Dislike Section -->
+    <div class="like-dislike">
+        @if(Auth::check())
+            <button class="like-btn" data-blog-id="{{ $blog->id }}" {{ $userLike && $userLike->is_like ? 'disabled' : '' }}>
+                {{ $blog->likes->where('is_like', true)->count() }} 👍 Like
+            </button>
 
-                    <!-- Display Replies -->
-                    <div class="replies">
-                        @foreach ($blog->comments->where('parent_id', $comment->id) as $reply)
-                            <div class="comment">
-                                <p><strong>{{ $reply->user->name }}</strong>: {{ $reply->comment }}</p>
-                                @if ($reply->is_admin)
-                                    <p class="admin-reply">Admin Reply</p>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
+            <button class="dislike-btn" data-blog-id="{{ $blog->id }}" {{ $userLike && !$userLike->is_like ? 'disabled' : '' }}>
+                {{ $blog->likes->where('is_like', false)->count() }} 👎 Dislike
+            </button>
+        @else
+            <p>You need to be <a href="{{ route('login') }}">logged in</a> to like or dislike this post.</p>
+        @endif
+    </div>
+
+
+            <!-- Comments Section -->
+            <div class="comments">
+                <h2>Comments:</h2>
+                @foreach ($blog->comments->whereNull('parent_id') as $comment)
+                    <div class="comment">
+                        <p><strong>{{ $comment->user->name }}</strong>: {{ $comment->comment }}</p>
+                        @if ($comment->is_admin)
+                            <p class="admin-reply">Admin Reply</p>
+                        @endif
+
+                        <!-- Display Replies -->
+                        <div class="replies">
+                            @foreach ($blog->comments->where('parent_id', $comment->id) as $reply)
+                                <div class="comment">
+                                    <p><strong>{{ $reply->user->name }}</strong>: {{ $reply->comment }}</p>
+                                    @if ($reply->is_admin)
+                                        <p class="admin-reply">Admin Reply</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
 
                     <!-- Reply Form -->
                     @if(Auth::check() && Auth::user()->user_type === 'admin')
@@ -165,4 +193,44 @@
         </div>
     </div>
 </body>
+<script>
+    $(document).ready(function() {
+        // Handle Like Button Click
+        $('.like-btn').click(function() {
+            var blogId = $(this).data('blog-id');
+
+            $.ajax({
+                url: '/blog/' + blogId + '/like',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    is_like: 1 // Like
+                },
+                success: function(response) {
+                    // Update like/dislike count without reloading the page
+                    location.reload();
+                }
+            });
+        });
+
+        // Handle Dislike Button Click
+        $('.dislike-btn').click(function() {
+            var blogId = $(this).data('blog-id');
+
+            $.ajax({
+                url: '/blog/' + blogId + '/like',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    is_like: 0 // Dislike
+                },
+                success: function(response) {
+                    // Update like/dislike count without reloading the page
+                    location.reload();
+                }
+            });
+        });
+    });
+</script>
+
 </html>

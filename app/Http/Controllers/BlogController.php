@@ -4,9 +4,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Blog;
+use App\Models\Like;
 use App\Models\Category;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class BlogController extends Controller
@@ -38,8 +39,9 @@ class BlogController extends Controller
     public function show($id)
     {
         $blog = Blog::with('comments')->findOrFail($id);
+        $userLike = $blog->likes->where('user_id', auth()->id())->first();
 
-        return view('single-blog', compact('blog'));
+        return view('single-blog', compact('blog', 'userLike'));
     }
 
     // Admin: Show a form to create a new blog
@@ -141,4 +143,61 @@ class BlogController extends Controller
 
         return redirect()->route('home');
     }
+
+    
+        public function likeBlog(Request $request, $id)
+    {
+        $blog = Blog::find($id);
+
+        // Check if the user has already liked/disliked the blog
+        $existingLike = Like::where('user_id', auth()->id())
+                            ->where('blog_id', $blog->id)
+                            ->first();
+
+        if ($existingLike) {
+            // If already liked/disliked
+            $existingLike->update([
+                'is_like' => $request->is_like
+            ]);
+        } else {
+            
+            Like::create([
+                'user_id' => auth()->id(),
+                'blog_id' => $blog->id,
+                'is_like' => $request->is_like
+            ]);
+        }
+
+        // Return JSON response for AJAX
+        return response()->json([
+            'success' => true,
+            'message' => 'Action completed successfully!'
+        ]);
+    }
+
+
+// public function dislikeBlog(Request $request, $id)
+// {
+//     $blog = Blog::find($id);
+
+//     $existingLike = Like::where('user_id', auth()->id())
+//                         ->where('blog_id', $blog->id)
+//                         ->first();
+
+//     if ($existingLike) {
+//         $existingLike->update([
+//             'is_like' => false
+//         ]);
+//     } else {
+//         Like::create([
+//             'user_id' => auth()->id(),
+//             'blog_id' => $blog->id,
+//             'is_like' => false
+//         ]);
+//     }
+
+//     return back();
+// }
+
+
 }
