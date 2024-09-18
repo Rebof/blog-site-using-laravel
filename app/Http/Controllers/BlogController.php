@@ -230,5 +230,31 @@ class BlogController extends Controller
 //     return back();
 // }
 
+public function search(Request $request)
+    {
+        $search = $request->search;
+
+        // Query to search in title, body, and related category
+        $blogs = Blog::where(function($query) use ($search) {
+            $query->where('title', 'like', "%$search%")
+                  ->orWhere('body', 'like', "%$search%");
+        })
+        ->get();
+
+        // Return search results to the view
+        return view('blog', compact('blogs', 'search'));
+    } 
+
+    public function getSuggestions(Request $request)
+{
+    $search = $request->search;
+    $suggestions = Blog::where('title', 'like', "%$search%")
+        ->orWhere('body', 'like', "%$search%")
+        ->select('title')
+        ->limit(5)
+        ->get();
+
+    return response()->json($suggestions);
+}
 
 }

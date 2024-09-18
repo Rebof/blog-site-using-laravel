@@ -63,4 +63,5 @@ Route::post('/blogs/{blogId}/comments/{commentId}/reply', [CommentController::cl
 Route::post('/blog/{id}/like', [BlogController::class, 'likeBlog'])->name('blog.like');
 
 
-
+route::get('/search', [BlogController::class, 'search'])->name('search');
+route::get('/api/blogs/suggestions', [BlogController::class, 'getSuggestions']);
