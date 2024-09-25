@@ -65,3 +65,14 @@ Route::post('/blog/{id}/like', [BlogController::class, 'likeBlog'])->name('blog.
 
 route::get('/search', [BlogController::class, 'search'])->name('search');
 route::get('/api/blogs/suggestions', [BlogController::class, 'getSuggestions']);
+
+
+
+
+Route::get('/test-email', function () {
+    Mail::raw('This is a test email', function ($message) {
+        $message->to('rebofrebok@gmail.com')
+                ->subject('Test Email');
+    });
+    return 'Test email sent!';
+});
